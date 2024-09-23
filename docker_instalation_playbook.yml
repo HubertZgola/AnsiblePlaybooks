@@ -1,0 +1,59 @@
+---
+- hosts: production
+  become: true
+  tasks:
+    - name: Uninstalling old docker packages if any exist.
+      ansible.builtin.apt:
+        pkg:
+          - docker.io
+          - docker-compose
+          - docker-doc
+          - podman-docker
+          - containerd.io
+          - runc 
+        state: absent
+        autoremove: yes
+
+    - name: OS update
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install ca-certificates and curl
+      ansible.builtin.apt:
+        pkg:
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present 
+    
+    - name: Create a directory with specified permissions.
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker's official GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+    
+    - name: Add Docker's official APT repository
+      ansible.builtin.apt_repository:
+        repo: 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable'
+        filename: 'docker.list'
+
+    - name: OS update
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install the Docker packages.
+      ansible.builtin.apt:
+        pkg:
+          - docker-ce
+          - docker-ce-cli 
+          - containerd.io 
+          - docker-buildx-plugin 
+          - docker-compose-plugin
+        state: present
