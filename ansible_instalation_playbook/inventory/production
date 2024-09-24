@@ -1,0 +1,3 @@
+[production]
+192.168.58.30 ansible_host=192.168.58.30 ansible_user=vagrant
+
