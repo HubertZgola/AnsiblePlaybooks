@@ -1,0 +1,36 @@
+---
+- name: Download jenkins package.
+  ansible.builtin.get_url:
+    url: "https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key"
+    dest: "/usr/share/keyrings/jenkins-keyring.asc"
+    mode: "0644"
+
+- name: Add Jenkins repository.
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"
+    filename: "jenkins"
+    state: present
+
+- name: Run the equivalent of apt-get update.
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Jenkins.
+  ansible.builtin.apt:
+    name: jenkins
+    state: latest
+
+- name: Set JAVA_HOME in Jenkins configuration
+  ansible.builtin.lineinfile:
+    path: /etc/default/jenkins
+    line: "JAVA_HOME=/opt/java/jdk-17.0.2"
+    create: yes
+
+- name: Reload systemd config
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Jenkins restart
+  ansible.builtin.systemd:
+    name: jenkins
+    state: restarted
